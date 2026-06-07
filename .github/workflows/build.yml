@@ -39,9 +39,24 @@ jobs:
     - name: Download iOS SDK
       if: steps.sdk-cache.outputs.cache-hit != 'true'
       run: |
-        # Clear the directory if it exists, then shallow clone the official SDKs directly
         rm -rf ~/theos/sdks
         git clone --depth 1 https://github.com/theos/sdks.git ~/theos/sdks
+
+    - name: Download Required Headers
+      run: |
+        # Download PoomSmart's YouTube and PS headers
+        git clone https://github.com/PoomSmart/YouTubeHeader.git ~/theos/include/YouTubeHeader
+        git clone https://github.com/PoomSmart/PSHeader.git ~/theos/include/PSHeader
+        
+        # Download opa334's libundirect headers
+        git clone https://github.com/opa334/libundirect.git /tmp/libundirect
+        cp -r /tmp/libundirect/libundirect ~/theos/include/
+
+    - name: Compile Tweak Package (Sideload Mode)
+      run: |
+        export THEOS=$HOME/theos
+        git submodule update --init --recursive
+        make package SIDELOAD=1 FINALPACKAGE=1
 
     - name: Compile Tweak Package (Sideload Mode)
       run: |
