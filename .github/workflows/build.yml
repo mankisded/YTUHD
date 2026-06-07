@@ -34,15 +34,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/theos/sdks
-        key: ios-sdks-v3 # Bumped to v3 to ensure a completely clean slate
+        key: ios-sdks-v4 # Bumped to v4 to guarantee a clean slate
 
     - name: Download iOS SDK
       if: steps.sdk-cache.outputs.cache-hit != 'true'
       run: |
-        mkdir -p ~/theos/sdks
-        curl -L https://github.com/theos/sdks/releases/download/v1.0/iPhoneOS16.5.sdk.tar.xz -o ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
-        tar -xf ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz -C ~/theos/sdks/
-        rm ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
+        # Clear the directory if it exists, then shallow clone the official SDKs directly
+        rm -rf ~/theos/sdks
+        git clone --depth 1 https://github.com/theos/sdks.git ~/theos/sdks
 
     - name: Compile Tweak Package (Sideload Mode)
       run: |
