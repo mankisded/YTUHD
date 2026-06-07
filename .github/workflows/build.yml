@@ -23,7 +23,8 @@ jobs:
 
     - name: Set up Theos Environment
       run: |
-        bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+        # Bypasses the installer's broken automatic SDK scraping routine
+        THEOS_DONT_INSTALL_SDKS=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
     - name: SDK Caching Setup
