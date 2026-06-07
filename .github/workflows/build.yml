@@ -3,9 +3,7 @@ name: Build YTUHD for Sideloading
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch: # Allows you to manually trigger the build from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,16 +13,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive # Automatically pulls vendor/libvpx and vendor/dav1d submodules
+        submodules: recursive
 
-    - name: Set up Homebrew Dependencies
+    - name: Install Dependencies
       run: |
-        brew install meson ninja
+        # Safely install required tools, including ldid (which the theos installer normally handles)
+        brew install meson || true
+        brew install ninja || true
+        brew install ldid || true
+        brew install xz || true
 
-    - name: Set up Theos Environment
+    - name: Set up Theos Environment Manually
       run: |
-        # Bypasses the installer's broken automatic SDK scraping routine
-        THEOS_DONT_INSTALL_SDKS=1 bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+        # Bypass the buggy install-theos script entirely and just clone the framework directly
+        git clone --recursive https://github.com/theos/theos.git ~/theos
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
     - name: SDK Caching Setup
@@ -32,13 +34,12 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/theos/sdks
-        key: ios-sdks-v2
+        key: ios-sdks-v3 # Bumped to v3 to ensure a completely clean slate
 
     - name: Download iOS SDK
       if: steps.sdk-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p ~/theos/sdks
-        # Use a direct distribution mirror link that bypasses Git LFS pointer issues
         curl -L https://github.com/theos/sdks/releases/download/v1.0/iPhoneOS16.5.sdk.tar.xz -o ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
         tar -xf ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz -C ~/theos/sdks/
         rm ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
@@ -46,7 +47,9 @@ jobs:
     - name: Compile Tweak Package (Sideload Mode)
       run: |
         export THEOS=$HOME/theos
-        # Targets the non-jailbreak compile path using the compact libundirect source implementation
+        # Explicitly update submodules to guarantee libvpx and dav1d exist
+        git submodule update --init --recursive
+        # Run the sideload compilation
         make package SIDELOAD=1 FINALPACKAGE=1
 
     - name: Upload Compiled Package Artifact
