@@ -34,7 +34,7 @@ jobs:
         key: ios-sdks-v1
 
     - name: Download iOS SDK
-      if: steps-cache.outputs.cache-hit != 'true'
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p ~/theos/sdks
         # Downloads a patched iOS 16.5 SDK compatible with the latest Theos/Clang setups
