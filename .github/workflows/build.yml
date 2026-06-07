@@ -55,14 +55,15 @@ jobs:
       run: |
         export THEOS=$HOME/theos
         git submodule update --init --recursive
-        make package SIDELOAD=1 FINALPACKAGE=1
-
-    - name: Compile Tweak Package (Sideload Mode)
-      run: |
-        export THEOS=$HOME/theos
-        # Explicitly update submodules to guarantee libvpx and dav1d exist
-        git submodule update --init --recursive
-        # Run the sideload compilation
+        
+        # 1. Fix WSL/Windows git permission stripping by making scripts executable
+        chmod +x vendor/build_libvpx.sh vendor/build_dav1d.sh
+        
+        # 2. Explicitly compile the VP9 and AV1 static libraries first
+        make libvpx
+        make dav1d
+        
+        # 3. Finally, package the tweak
         make package SIDELOAD=1 FINALPACKAGE=1
 
     - name: Upload Compiled Package Artifact
