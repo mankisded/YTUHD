@@ -48,9 +48,8 @@ jobs:
         git clone https://github.com/PoomSmart/YouTubeHeader.git ~/theos/include/YouTubeHeader
         git clone https://github.com/PoomSmart/PSHeader.git ~/theos/include/PSHeader
         
-        # Download opa334's libundirect headers
-        git clone https://github.com/opa334/libundirect.git /tmp/libundirect
-        cp -r /tmp/libundirect/libundirect ~/theos/include/
+        # Download opa334's libundirect headers directly into the include folder
+        git clone https://github.com/opa334/libundirect.git ~/theos/include/libundirect
 
     - name: Compile Tweak Package (Sideload Mode)
       run: |
