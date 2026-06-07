@@ -31,14 +31,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/theos/sdks
-        key: ios-sdks-v1
+        key: ios-sdks-v2
 
     - name: Download iOS SDK
       if: steps.sdk-cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p ~/theos/sdks
-        # Downloads a patched iOS 16.5 SDK compatible with the latest Theos/Clang setups
-        curl -L https://github.com/theos/sdks/raw/master/iPhoneOS16.5.sdk.tar.xz -o ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
+        # Use a direct distribution mirror link that bypasses Git LFS pointer issues
+        curl -L https://github.com/theos/sdks/releases/download/v1.0/iPhoneOS16.5.sdk.tar.xz -o ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
         tar -xf ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz -C ~/theos/sdks/
         rm ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
 
