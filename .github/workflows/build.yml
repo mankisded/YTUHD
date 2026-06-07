@@ -1,0 +1,55 @@
+name: Build YTUHD for Sideloading
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allows you to manually trigger the build from the Actions tab
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive # Automatically pulls vendor/libvpx and vendor/dav1d submodules
+
+    - name: Set up Homebrew Dependencies
+      run: |
+        brew install meson ninja
+
+    - name: Set up Theos Environment
+      run: |
+        bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+        echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+
+    - name: SDK Caching Setup
+      id: sdk-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/theos/sdks
+        key: ios-sdks-v1
+
+    - name: Download iOS SDK
+      if: steps-cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p ~/theos/sdks
+        # Downloads a patched iOS 16.5 SDK compatible with the latest Theos/Clang setups
+        curl -L https://github.com/theos/sdks/raw/master/iPhoneOS16.5.sdk.tar.xz -o ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
+        tar -xf ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz -C ~/theos/sdks/
+        rm ~/theos/sdks/iPhoneOS16.5.sdk.tar.xz
+
+    - name: Compile Tweak Package (Sideload Mode)
+      run: |
+        export THEOS=$HOME/theos
+        # Targets the non-jailbreak compile path using the compact libundirect source implementation
+        make package SIDELOAD=1 FINALPACKAGE=1
+
+    - name: Upload Compiled Package Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: YTUHD-Sideload-Package
+        path: packages/*.deb
